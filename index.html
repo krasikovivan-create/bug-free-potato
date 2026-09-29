@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1511">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Футбол Соло">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<title>Футбол Соло</title>
+<style>
+  :root {
+    --bg: #0d1511;
+    --panel: #16211b;
+    --panel-2: #213028;
+    --line: #2c3d33;
+    --text: #f1f5f2;
+    --muted: #93a39a;
+    --accent: #2fd27a;
+    --accent-ink: #062a14;
+    --gold: #ffd166;
+    --warn: #ff8a5b;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    padding: env(safe-area-inset-top) 16px calc(84px + env(safe-area-inset-bottom));
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  [hidden] { display: none !important; }
+  header { padding: 16px 0 4px; display: flex; align-items: center; gap: 10px; }
+  header svg { width: 30px; height: 30px; flex: none; }
+  h1 { font-size: 21px; margin: 0; }
+  h1 span { color: var(--accent); }
+  h2 { font-size: 17px; margin: 22px 0 10px; }
+  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
+  p { line-height: 1.45; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+
+  /* Bottom navigation */
+  nav.tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    display: flex; justify-content: center;
+    background: rgba(13, 21, 17, .94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  }
+  nav.tabs .in { display: flex; width: 100%; max-width: 720px; }
+  nav.tabs button {
+    flex: 1; background: none; border: 0; color: var(--muted); font: inherit; font-size: 11px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 2px; border-radius: 10px; cursor: pointer;
+  }
+  nav.tabs button b { font-size: 21px; line-height: 1; font-weight: 400; filter: grayscale(1) opacity(.7); }
+  nav.tabs button.active { color: var(--text); }
+  nav.tabs button.active b { filter: none; }
+
+  /* Common controls */
+  .card { background: var(--panel); border-radius: var(--radius); padding: 14px; }
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .seg button, .chipbtn {
+    background: var(--panel); border: 1px solid var(--line); color: var(--text);
+    font: inherit; font-size: 14px; padding: 9px 13px; border-radius: 10px; cursor: pointer;
+  }
+  .seg button.on, .chipbtn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .toggle:last-child { border-bottom: 0; }
+  .toggle input { width: 22px; height: 22px; accent-color: var(--accent); flex: none; }
+  .btn {
+    display: block; width: 100%; border: 0; border-radius: 12px; padding: 15px; font: inherit; font-size: 16px; font-weight: 700;
+    cursor: pointer; background: var(--panel-2); color: var(--text); text-align: center; text-decoration: none;
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.ghost { background: none; border: 1px solid var(--line); }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  input[type=search], input[type=number] {
+    width: 100%; background: var(--panel); border: 1px solid var(--line); color: var(--text);
+    font: inherit; font-size: 16px; padding: 11px 13px; border-radius: 12px; outline: none;
+  }
+  input:focus { border-color: var(--accent); }
+
+  .lvl { display: inline-flex; gap: 2px; vertical-align: 1px; }
+  .lvl i { width: 6px; height: 12px; border-radius: 2px; background: var(--line); }
+  .lvl i.on { background: var(--gold); }
+
+  /* Plan list */
+  .plan { list-style: none; margin: 0; padding: 0; counter-reset: n; }
+  .plan li {
+    display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); counter-increment: n;
+  }
+  .plan li::before { content: counter(n); color: var(--muted); font-size: 13px; width: 20px; text-align: right; flex: none; }
+  .plan li .t { flex: 1; min-width: 0; }
+  .plan li .t b { display: block; font-size: 15px; font-weight: 600; }
+  .plan li .t span { font-size: 12px; color: var(--muted); }
+  .plan li button { background: none; border: 0; color: var(--muted); font-size: 18px; padding: 4px 8px; cursor: pointer; }
+  .summary { display: flex; gap: 16px; font-size: 14px; color: var(--muted); margin: 6px 0 12px; }
+  .summary b { color: var(--text); }
+
+  /* Library */
+  .cats { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 4px; scrollbar-width: none; margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+  .cats::-webkit-scrollbar { display: none; }
+  .cats .chipbtn { white-space: nowrap; flex: none; }
+  .exlist { display: grid; gap: 8px; margin-top: 10px; }
+  .ex {
+    display: flex; align-items: center; gap: 12px; background: var(--panel); border-radius: 12px; padding: 12px;
+    cursor: pointer; border: 0; color: inherit; font: inherit; text-align: left; width: 100%;
+  }
+  .ex .ic { font-size: 22px; width: 40px; height: 40px; display: grid; place-items: center; background: var(--panel-2); border-radius: 10px; flex: none; }
+  .ex .t { flex: 1; min-width: 0; }
+  .ex .t b { display: block; font-size: 15px; font-weight: 600; }
+  .ex .t span { font-size: 12px; color: var(--muted); }
+  .ex .fav { color: var(--gold); font-size: 16px; }
+  .count { font-size: 13px; color: var(--muted); margin-top: 10px; }
+
+  /* Sheet (exercise detail) */
+  .sheet-bg { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+  .sheet {
+    background: var(--panel); width: 100%; max-width: 720px; max-height: 88vh; overflow-y: auto;
+    border-radius: 20px 20px 0 0; padding: 8px 18px calc(20px + env(safe-area-inset-bottom));
+    animation: up .22s ease-out;
+  }
+  @keyframes up { from { transform: translateY(40px); opacity: .5; } to { transform: none; opacity: 1; } }
+  .sheet .grab { width: 40px; height: 5px; background: var(--line); border-radius: 3px; margin: 4px auto 12px; }
+  .sheet h2 { margin: 0 0 2px; font-size: 22px; }
+  .sheet .en { color: var(--muted); font-size: 13px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+  .tag { background: var(--panel-2); border-radius: 8px; padding: 5px 9px; font-size: 12px; color: var(--muted); }
+  .tag b { color: var(--text); font-weight: 600; }
+  ol.steps { padding-left: 22px; margin: 8px 0; }
+  ol.steps li { margin: 6px 0; line-height: 1.45; }
+  .tip { background: rgba(255, 209, 102, .1); border-left: 3px solid var(--gold); padding: 10px 12px; border-radius: 0 10px 10px 0; font-size: 14px; line-height: 1.45; margin: 14px 0; }
+  .sheet .actions { display: grid; gap: 8px; margin-top: 16px; }
+
+  /* Player */
+  .player { position: fixed; inset: 0; z-index: 30; background: var(--bg); overflow-y: auto; padding: env(safe-area-inset-top) 16px calc(16px + env(safe-area-inset-bottom)); }
+  .player .wrap { display: flex; flex-direction: column; min-height: 100%; }
+  .ptop { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 6px; color: var(--muted); font-size: 14px; }
+  .ptop button { background: var(--panel); border: 0; color: var(--text); width: 38px; height: 38px; border-radius: 50%; font-size: 18px; cursor: pointer; }
+  .phase { text-align: center; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-top: 8px; }
+  .phase.work { color: var(--accent); }
+  .phase.rest, .phase.prep { color: var(--gold); }
+  .ring { position: relative; width: min(62vw, 260px); margin: 8px auto; }
+  .ring svg { display: block; width: 100%; height: auto; transform: rotate(-90deg); }
+  .ring .num { position: absolute; inset: 0; display: grid; place-items: center; font-size: clamp(54px, 17vw, 78px); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .pname { text-align: center; font-size: 24px; font-weight: 800; margin: 4px 0 2px; }
+  .pcat { text-align: center; color: var(--muted); font-size: 13px; }
+  .pdesc { margin-top: 14px; }
+  .pdesc ol { padding-left: 20px; margin: 6px 0 0; }
+  .pdesc li { margin: 4px 0; line-height: 1.4; font-size: 15px; }
+  .next { margin-top: 12px; color: var(--muted); font-size: 14px; text-align: center; }
+  .next b { color: var(--text); }
+  .pbar { height: 4px; background: var(--panel-2); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+  .pbar > div { height: 100%; background: var(--accent); width: 0; transition: width .3s linear; }
+  .pctl { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 10px; margin-top: auto; padding-top: 18px; }
+  .pctl .btn { font-size: 20px; }
+  .done { text-align: center; padding: 40px 0; }
+  .done .big { font-size: 64px; }
+
+  /* Coach */
+  .coach-cmd { text-align: center; font-size: clamp(34px, 11vw, 56px); font-weight: 900; line-height: 1.1; min-height: 2.4em; display: grid; place-items: center; margin: 30px 0 10px; }
+  .coach-cmd.flash { animation: flash .5s ease-out; }
+  @keyframes flash { from { color: var(--accent); transform: scale(1.1); } to { color: var(--text); transform: none; } }
+
+  /* Stats */
+  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .tile { background: var(--panel); border-radius: 12px; padding: 14px; }
+  .tile b { display: block; font-size: 28px; font-variant-numeric: tabular-nums; }
+  .tile span { font-size: 12px; color: var(--muted); }
+  .hist { list-style: none; padding: 0; margin: 0; }
+  .hist li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .hist li span { color: var(--muted); }
+  .record { display: flex; align-items: center; gap: 14px; }
+  .record .val { font-size: 42px; font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .install { font-size: 14px; line-height: 1.5; }
+  .install ol { padding-left: 20px; margin: 6px 0; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--panel-2); color: var(--text); padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 60; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg viewBox="0 0 512 512" aria-hidden="true"><circle cx="256" cy="256" r="240" fill="#f1f5f2"/><polygon points="256,196 313,237 291,304 221,304 199,237" fill="#0d1511"/><g stroke="#0d1511" stroke-width="16"><line x1="256" y1="196" x2="256" y2="20"/><line x1="313" y1="237" x2="480" y2="185"/><line x1="291" y1="304" x2="395" y2="450"/><line x1="221" y1="304" x2="117" y2="450"/><line x1="199" y1="237" x2="32" y2="185"/></g></svg>
+    <h1>Футбол <span>Соло</span></h1>
+  </header>
+
+  <!-- ===== TRAIN ===== -->
+  <section id="tab-train">
+    <div id="setup">
+      <h3>Длительность</h3>
+      <div class="seg" data-opt="minutes"><button data-v="10">10 мин</button><button data-v="20">20 мин</button><button data-v="30">30 мин</button><button data-v="45">45 мин</button></div>
+      <h3>Уровень</h3>
+      <div class="seg" data-opt="level"><button data-v="1">Новичок</button><button data-v="2">Средний</button><button data-v="3">Продвинутый</button></div>
+      <h3>Фокус</h3>
+      <div class="seg" data-opt="focus">
+        <button data-v="mix">Всё понемногу</button>
+        <button data-v="skills">Финты и развороты</button>
+        <button data-v="touch">Контроль и набивание</button>
+        <button data-v="dribble">Дриблинг</button>
+        <button data-v="strike">Пас и удары</button>
+      </div>
+      <h3>Работа / отдых</h3>
+      <div class="seg" data-opt="interval"><button data-v="30/15">30 / 15 с</button><button data-v="45/15">45 / 15 с</button><button data-v="60/20">60 / 20 с</button></div>
+      <h3>Что есть рядом</h3>
+      <div class="card" style="padding:2px 14px">
+        <label class="toggle">Стенка или ворота <input type="checkbox" data-opt="wall"></label>
+        <label class="toggle">Фишки (или бутылки, обувь) <input type="checkbox" data-opt="cones"></label>
+        <label class="toggle">Голосовые подсказки <input type="checkbox" data-opt="voice"></label>
+      </div>
+      <div style="margin-top:18px"><button class="btn primary" id="build">Собрать тренировку</button></div>
+    </div>
+
+    <div id="planView" hidden>
+      <h2>Твоя тренировка</h2>
+      <div class="summary" id="planSummary"></div>
+      <ul class="plan" id="planList"></ul>
+      <div class="row" style="margin-top:16px">
+        <button class="btn ghost" id="planBack">← Настройки</button>
+        <button class="btn ghost" id="planShuffle">↻ Другая</button>
+      </div>
+      <div style="margin-top:10px"><button class="btn primary" id="planStart">▶ Начать</button></div>
+    </div>
+  </section>
+
+  <!-- ===== LIBRARY ===== -->
+  <section id="tab-lib" hidden>
+    <div style="margin-top:8px"><input type="search" id="q" placeholder="Поиск: ножницы, набивание, разворот…" autocomplete="off"></div>
+    <div class="cats" id="cats"></div>
+    <div class="seg" id="lvlFilter" style="margin-top:6px">
+      <button data-v="0" class="on">Все уровни</button><button data-v="1">Новичок</button><button data-v="2">Средний</button><button data-v="3">Продвинутый</button>
+    </div>
+    <div class="count" id="libCount"></div>
+    <div class="exlist" id="exlist"></div>
+  </section>
+
+  <!-- ===== COACH ===== -->
+  <section id="tab-coach" hidden>
+    <div id="coachSetup">
+      <p class="muted small" style="margin-top:12px">Веди мяч, а тренер голосом называет случайный финт или разворот — выполняй сразу. Тренирует реакцию и игру с поднятой головой.</p>
+      <h3>Темп команд</h3>
+      <div class="seg" data-copt="tempo"><button data-v="slow">Спокойно (7–10 с)</button><button data-v="mid">Средне (4–7 с)</button><button data-v="fast">Быстро (2–4 с)</button></div>
+      <h3>Длительность</h3>
+      <div class="seg" data-copt="dur"><button data-v="60">1 мин</button><button data-v="120">2 мин</button><button data-v="180">3 мин</button><button data-v="300">5 мин</button></div>
+      <h3>Команды <span class="muted" style="text-transform:none;letter-spacing:0">— нажми, чтобы выключить</span></h3>
+      <div class="seg" id="coachMoves"></div>
+      <div style="margin-top:18px"><button class="btn primary" id="coachStart">▶ Старт</button></div>
+    </div>
+  </section>
+
+  <!-- ===== STATS ===== -->
+  <section id="tab-stats" hidden>
+    <h3>Статистика</h3>
+    <div class="tiles" id="tiles"></div>
+
+    <h3>Рекорд набивания</h3>
+    <div class="card">
+      <div class="record"><div class="val" id="jBest">0</div><div class="muted small" id="jBestInfo">Запиши свой первый результат</div></div>
+      <div class="row" style="margin-top:12px">
+        <input type="number" id="jInput" inputmode="numeric" min="1" placeholder="Сколько раз набил?">
+        <button class="btn primary" id="jSave" style="flex:0 0 auto;width:auto;padding:0 20px">Записать</button>
+      </div>
+      <ul class="hist" id="jHist" style="margin-top:8px"></ul>
+    </div>
+
+    <h3>Последние тренировки</h3>
+    <ul class="hist" id="hist"></ul>
+
+    <h3>Установка на телефон</h3>
+    <div class="card install">
+      <b>iPhone:</b>
+      <ol><li>Открой эту страницу в Safari.</li><li>Нажми «Поделиться» (квадрат со стрелкой).</li><li>«На экран „Домой“» → «Добавить».</li></ol>
+      <b>Android:</b> Chrome → меню ⋮ → «Установить приложение».<br>
+      <span class="muted">После установки приложение работает и без интернета.</span>
+    </div>
+
+    <div style="margin-top:22px"><button class="btn ghost" id="reset">Сбросить все данные</button></div>
+  </section>
+</div>
+
+<nav class="tabs"><div class="in">
+  <button data-tab="train" class="active"><b>⏱</b>Тренировка</button>
+  <button data-tab="lib"><b>📚</b>Упражнения</button>
+  <button data-tab="coach"><b>📣</b>Тренер</button>
+  <button data-tab="stats"><b>🏆</b>Прогресс</button>
+</div></nav>
+
+<!-- Workout / single-exercise / coach player -->
+<div class="player" id="player" hidden>
+  <div class="wrap">
+    <div class="ptop"><span id="pCount"></span><span id="pTotal"></span><button id="pClose" aria-label="Закрыть">✕</button></div>
+    <div class="pbar"><div id="pBar"></div></div>
+    <div id="pLive">
+      <div class="phase" id="pPhase"></div>
+      <div class="ring">
+        <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="var(--panel-2)" stroke-width="8"/><circle id="pArc" cx="60" cy="60" r="54" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="0"/></svg>
+        <div class="num" id="pNum">0</div>
+      </div>
+      <div class="coach-cmd" id="pCmd" hidden></div>
+      <div class="pname" id="pName"></div>
+      <div class="pcat" id="pCat"></div>
+      <div class="card pdesc" id="pDesc"></div>
+      <div class="next" id="pNext"></div>
+    </div>
+    <div class="done" id="pDone" hidden>
+      <div class="big">🏆</div>
+      <h2>Тренировка окончена!</h2>
+      <p class="muted" id="pDoneInfo"></p>
+    </div>
+    <div class="pctl" id="pCtl">
+      <button class="btn" id="pPrev" aria-label="Назад">⏮</button>
+      <button class="btn primary" id="pPlay">⏸</button>
+      <button class="btn" id="pSkip" aria-label="Дальше">⏭</button>
+    </div>
+  </div>
+</div>
+
+<div id="sheetRoot"></div>
+
+<script>
+'use strict';
+
+/* =========================================================================
+   Exercise database
+   c: category, l: level 1-3, eq: required equipment, t: default work (s),
+   s: switch foot halfway, st: steps
+   ========================================================================= */
+const CATS = {
+  control: { name: 'Контроль мяча', ic: '🦶' },
+  juggle:  { name: 'Набивание',     ic: '🔁' },
+  dribble: { name: 'Дриблинг',      ic: '🏃' },
+  feint:   { name: 'Финты',         ic: '✨' },
+  turn:    { name: 'Развороты',     ic: '↩️' },
+  wall:    { name: 'Пас и приём',   ic: '🧱' },
+  shot:    { name: 'Удары',         ic: '🎯' },
+  fit:     { name: 'Ловкость',      ic: '⚡' },
+};
+
+const EQ = { wall: 'стенка/ворота', cones: 'фишки' };
+
+const EX = [
+  // ---------- Контроль мяча ----------
+  { id: 'toe-taps', c: 'control', l: 1, n: 'Тык-так подошвой', en: 'Toe taps',
+    d: 'Поочерёдно касайся верха мяча подошвами, стоя на носках. Базовое упражнение на частоту и координацию.',
+    st: ['Мяч перед тобой, колени чуть согнуты.', 'Коснись верха мяча подошвой правой, сразу — левой.', 'Держи ритм, мяч должен оставаться на месте.'],
+    tip: 'Касайся мяча носком подошвы, а не всей стопой. Смотри вперёд, а не под ноги.' },
+  { id: 'inside-touches', c: 'control', l: 1, n: 'Перекаты «щёчкой»', en: 'Inside touches, bell touches',
+    d: 'Перекидывай мяч между стоп внутренними сторонами, быстро и мелко.',
+    st: ['Мяч между стоп, стоишь на носках.', 'Толкни мяч внутренней стороной правой к левой.', 'Левая сразу возвращает. Мяч проходит всего 20–30 см.'],
+    tip: 'Лёгкие подпрыгивания на носках помогают держать темп.' },
+  { id: 'sole-rolls', c: 'control', l: 1, n: 'Перекаты подошвой в сторону', en: 'Sole rolls',
+    d: 'Прокатывай мяч подошвой поперёк тела и останавливай другой ногой.', s: true,
+    st: ['Поставь подошву правой на мяч.', 'Прокати мяч влево перед собой.', 'Останови подошвой левой и прокати обратно.'],
+    tip: 'Мяч не отрывается от подошвы во время переката — «ведёшь» его, а не пинаешь.' },
+  { id: 'pull-push', c: 'control', l: 1, n: 'Пул-пуш (на себя — от себя)', en: 'Pull push', s: true,
+    d: 'Подошвой тянешь мяч назад, шнурками той же ноги толкаешь вперёд.',
+    st: ['Подошва на мяче.', 'Потяни мяч на себя.', 'Стопа опускается за мяч — толкни шнурками вперёд.', 'Повторяй без пауз.'],
+    tip: 'Опорная нога всё время на носке и подпрыгивает в такт.' },
+  { id: 'v-drag', c: 'control', l: 2, n: 'V-протяжка', en: 'V-drag, V-move', s: false,
+    d: 'Подошвой тянешь мяч назад и внутренней стороной той же ноги выталкиваешь по диагонали. Мяч рисует букву V.',
+    st: ['Потяни мяч подошвой правой назад.', 'Внутренней стороной правой толкни его вперёд-влево.', 'Повтори то же левой ногой в другую сторону.'],
+    tip: 'Хорошая база для разворотов под давлением.' },
+  { id: 'l-drag', c: 'control', l: 2, n: 'L-протяжка', en: 'L-drag, L-move',
+    d: 'Подошвой назад, затем внутренней стороной за опорную ногу. Мяч рисует букву L.', s: true,
+    st: ['Потяни мяч подошвой назад.', 'Не отрывая ногу, внутренней стороной отправь мяч за опорную ногу.', 'Прими мяч другой ногой и продолжай.'],
+    tip: 'Опорная нога чуть впереди мяча, иначе мяч в неё упрётся.' },
+  { id: 'in-out', c: 'control', l: 1, n: 'Внутренняя — внешняя', en: 'Inside outside touches', s: true,
+    d: 'Одной ногой мелкие касания: внутренней стороной к себе, внешней — наружу.',
+    st: ['Работай только правой ногой.', 'Касание внутренней стороной — мяч уходит влево.', 'Касание внешней — мяч возвращается вправо.'],
+    tip: 'Касания должны быть очень мелкими, мяч не дальше 30 см от стопы.' },
+  { id: 'sole-circles', c: 'control', l: 2, n: 'Круги подошвой', en: 'Sole circles', s: true,
+    d: 'Вращай мяч подошвой по кругу под стопой, не отпуская его.',
+    st: ['Подошва на мяче.', 'Катай мяч по кругу по часовой стрелке.', 'Через 10 секунд — против часовой.'],
+    tip: 'Отличное упражнение на «чувство мяча» подошвой.' },
+  { id: 'taps-around', c: 'control', l: 2, n: 'Тык-так по кругу', en: 'Toe taps around the ball',
+    d: 'Тык-так, при этом обходишь мяч по кругу.',
+    st: ['Начни обычный тык-так.', 'С каждым касанием смещайся на шаг вокруг мяча.', 'Полный круг — смени направление.'],
+    tip: 'Держи мяч на месте, двигается только игрок.' },
+  { id: 'box-1m', c: 'control', l: 2, n: 'Касания в квадрате 1×1 м', en: 'Ball mastery box',
+    d: 'Удерживай мяч в воображаемом квадрате метр на метр, делая максимум касаний любыми частями стопы.',
+    st: ['Обозначь квадрат (можно линиями на асфальте).', 'Касайся мяча каждые полсекунды: подошва, щёчка, внешняя.', 'Мяч не должен выйти за границы.'],
+    tip: 'Считай касания за подход и старайся побить результат.' },
+  { id: 'roll-stop', c: 'control', l: 2, n: 'Перекат и стоп', en: 'Roll and stop', s: true,
+    d: 'Прокатываешь мяч подошвой в сторону, догоняешь и останавливаешь подошвой другой ноги, сразу катишь назад.',
+    st: ['Прокати мяч подошвой вправо на полметра.', 'Приставным шагом догони его.', 'Останови подошвой, прокати в обратную сторону.'],
+    tip: 'Работай на носках, корпус над мячом.' },
+  { id: 'scissor-sole', c: 'control', l: 3, n: 'Бразильская связка', en: 'Brazilian ball mastery combo',
+    d: 'Цепочка: подошва — щёчка — внешняя — подошва другой ногой. Главное — ритм.',
+    st: ['Перекат подошвой правой влево.', 'Касание внутренней стороной левой обратно.', 'Касание внешней стороной правой вправо.', 'Остановка подошвой — и то же с другой ноги.'],
+    tip: 'Начни медленно, ускоряйся только когда связка идёт без ошибок.' },
+
+  // ---------- Набивание ----------
+  { id: 'j-bounce', c: 'juggle', l: 1, n: 'Набивание с отскоком', en: 'Bounce juggling',
+    d: 'Удар подъёмом — мяч отскакивает от земли — снова удар. Лучший старт для новичков.',
+    st: ['Урони мяч из рук.', 'После отскока подбей его подъёмом (шнурками) вверх на уровень пояса.', 'Дай отскочить и повтори.'],
+    tip: 'Носок оттянут, стопа «замок». Бей по центру мяча, чтобы он летел ровно вверх.' },
+  { id: 'j-strong', c: 'juggle', l: 1, n: 'Набивание сильной ногой', en: 'Juggling strong foot',
+    d: 'Подряд подъёмом одной ноги без касания земли.',
+    st: ['Подбрось мяч руками.', 'Мягко подбивай шнурками на высоту колена.', 'Считай касания.'],
+    tip: 'Невысокие касания легче контролировать, чем высокие.' },
+  { id: 'j-alt', c: 'juggle', l: 2, n: 'Набивание со сменой ног', en: 'Alternate feet juggling',
+    d: 'Правая — левая — правая. Касания поочерёдно.',
+    st: ['Начни набивать сильной ногой.', 'Переходи на чередование: каждое касание — другой ногой.'],
+    tip: 'Мяч должен лететь чуть в сторону другой ноги.' },
+  { id: 'j-weak', c: 'juggle', l: 2, n: 'Набивание слабой ногой', en: 'Weak foot juggling',
+    d: 'Только слабой ногой. Самый быстрый путь к «двуногости».',
+    st: ['Подбрось мяч, набивай только слабой ногой.', 'Если сложно — делай с отскоком.'],
+    tip: 'Записывай рекорд слабой ноги отдельно.' },
+  { id: 'j-thigh', c: 'juggle', l: 1, n: 'Набивание бедром', en: 'Thigh juggling',
+    d: 'Бедро — бедро. Мяч подбивается серединой бедра.',
+    st: ['Подбрось мяч руками.', 'Подними колено, бедро параллельно земле.', 'Чередуй ноги.'],
+    tip: 'Бедро останавливается в момент касания — не «пинай» мяч.' },
+  { id: 'j-head', c: 'juggle', l: 2, n: 'Набивание головой', en: 'Head juggling',
+    d: 'Подбиваешь мяч лбом, глаза открыты.',
+    st: ['Подбрось мяч над собой.', 'Встреть его лбом, ноги пружинят.', 'Начни с 2–3 касаний, затем лови.'],
+    tip: 'Касание — верхней частью лба у линии волос. Смотри на мяч.' },
+  { id: 'j-ladder', c: 'juggle', l: 3, n: 'Лесенка: нога — бедро — голова', en: 'Foot thigh head juggling',
+    d: 'Цепочка по высоте: нога, бедро, голова, бедро, нога.',
+    st: ['Набей подъёмом.', 'Подними мяч выше — на бедро.', 'Бедром подбрось на голову.', 'Спускайся обратно вниз.'],
+    tip: 'Каждый переход — чуть более высокое касание.' },
+  { id: 'j-outside', c: 'juggle', l: 3, n: 'Набивание внешней стороной', en: 'Outside foot juggling',
+    d: 'Касания внешней стороной стопы — сложно, но отлично развивает контроль.',
+    st: ['Набивай подъёмом.', 'Вставляй касание внешней стороной стопы.', 'Постепенно делай 2–3 внешних подряд.'],
+    tip: 'Нога поднимается в сторону, стопа развёрнута внутрь.' },
+  { id: 'j-inside', c: 'juggle', l: 2, n: 'Набивание «щёчкой»', en: 'Inside foot juggling',
+    d: 'Касания внутренней стороной стопы, как в «секе».',
+    st: ['Подними ногу согнутой, стопа развёрнута наружу.', 'Подбивай мяч внутренней стороной.', 'Чередуй ноги.'],
+    tip: 'Касание в центр мяча, стопа параллельна земле.' },
+  { id: 'j-pickup', c: 'juggle', l: 2, n: 'Подъём мяча с земли', en: 'Juggling pick up, flick up', s: true,
+    d: 'Поднимаешь мяч ногой без рук и сразу начинаешь набивать.',
+    st: ['Потяни мяч подошвой на себя.', 'Когда он накатывается на подъём, подбрось его вверх.', 'Продолжи набиванием.'],
+    tip: 'Другой способ: зажми мяч между стоп и подпрыгни.' },
+  { id: 'j-highlow', c: 'juggle', l: 3, n: 'Высокое — низкое', en: 'High low juggling',
+    d: 'Чередуй низкое касание и высокий подброс выше головы, мягко гася его.',
+    st: ['Два низких касания.', 'Одно высокое — мяч выше головы.', 'Прими падающий мяч мягким подъёмом.'],
+    tip: 'На приёме нога «уходит» вниз вместе с мячом.' },
+  { id: 'j-atw', c: 'juggle', l: 3, n: '«Вокруг света»', en: 'Around the world',
+    d: 'Классический трюк: после касания обводишь стопой вокруг мяча в воздухе.',
+    st: ['Подбей мяч чуть выше, закручивая его к себе.', 'Быстро обведи ногу вокруг мяча снаружи внутрь.', 'Продолжи набивание.'],
+    tip: 'Движение идёт от бедра, а не от колена.' },
+  { id: 'j-walk', c: 'juggle', l: 3, n: 'Набивание в движении', en: 'Walking juggling',
+    d: 'Набивай, шагая вперёд, назад и в стороны.',
+    st: ['Набивай на месте.', 'Подбивай мяч чуть вперёд и шагай за ним.', 'Пройди 10 метров не уронив.'],
+    tip: 'Касания небольшие, мяч чуть впереди.' },
+  { id: 'j-stall', c: 'juggle', l: 3, n: 'Остановка мяча на подъёме', en: 'Foot stall, catch',
+    d: 'Ловишь мяч на подъём стопы и удерживаешь 2–3 секунды.',
+    st: ['Подбрось мяч.', 'Подставь подъём, в момент касания опусти ногу вниз вместе с мячом.', 'Удержи мяч на стопе.'],
+    tip: 'Носок чуть вверх, образуя «ложку».' },
+
+  // ---------- Дриблинг ----------
+  { id: 'd-slalom', c: 'dribble', l: 1, eq: ['cones'], n: 'Слалом обеими ногами', en: 'Cone slalom',
+    d: '6–8 фишек в ряд через 1 м. Обводи змейкой, частыми касаниями.',
+    st: ['Выставь фишки в линию.', 'Обводи змейкой: правая сторона — правой ногой, левая — левой.', 'Обратно — рывком без фишек.'],
+    tip: 'Касание на каждый шаг. Мяч рядом с ногой.' },
+  { id: 'd-outside', c: 'dribble', l: 2, eq: ['cones'], n: 'Слалом внешней стороной', en: 'Outside foot slalom',
+    d: 'Змейка только внешними сторонами стоп — главный навык скоростного дриблинга.',
+    st: ['Обводи фишки только внешней стороной.', 'Вправо — правой, влево — левой.'],
+    tip: 'Стопа развёрнута внутрь, носок вниз.' },
+  { id: 'd-inside', c: 'dribble', l: 1, eq: ['cones'], n: 'Слалом «щёчкой»', en: 'Inside foot slalom',
+    d: 'Змейка только внутренними сторонами: мяч перекидывается между ног на каждой фишке.',
+    st: ['Внутренней стороной правой — влево.', 'Внутренней стороной левой — вправо.'],
+    tip: 'Касания короткие, работай на носках.' },
+  { id: 'd-weak', c: 'dribble', l: 2, eq: ['cones'], n: 'Слалом слабой ногой', en: 'Weak foot dribbling',
+    d: 'Весь слалом — только слабой ногой: внутренней и внешней стороной.',
+    st: ['Работай только слабой ногой.', 'Внутренняя сторона к себе, внешняя от себя.'],
+    tip: 'Лучше медленно, но чисто.' },
+  { id: 'd-eight', c: 'dribble', l: 1, eq: ['cones'], n: 'Восьмёрка', en: 'Figure eight dribbling',
+    d: 'Две фишки через 3 м. Веди мяч восьмёркой вокруг них.',
+    st: ['Обведи первую фишку по часовой.', 'Перейди ко второй — против часовой.', 'Меняй направление каждые 30 секунд.'],
+    tip: 'На повороте мяч ведёт дальняя от фишки нога.' },
+  { id: 'd-square', c: 'dribble', l: 2, eq: ['cones'], n: 'Квадрат с разворотами', en: 'Box dribble turns',
+    d: 'Квадрат 5×5 м. У каждой фишки — разворот и ведение к следующей.',
+    st: ['Веди к фишке.', 'У фишки делай разворот (Кройф, подошвой, щёчкой).', 'Ускорение к следующей фишке.'],
+    tip: 'Каждую сторону квадрата — новый разворот.' },
+  { id: 'd-sprint', c: 'dribble', l: 1, n: 'Спринт с мячом и стоп', en: 'Speed dribble stop',
+    d: 'Рывок с мячом 10–15 м, резкая остановка подошвой, ведение обратно.',
+    st: ['Веди мяч на скорости, толкая его шнурками.', 'Резко останови подошвой.', 'Развернись и веди назад.'],
+    tip: 'На скорости касание раз в 2–3 шага, перед стопом — мелкие шаги.' },
+  { id: 'd-pace', c: 'dribble', l: 2, n: 'Смена темпа', en: 'Change of pace',
+    d: 'Медленное ведение — взрыв. Главное оружие против защитника.',
+    st: ['Медленно веди мяч подошвой или мелкими касаниями.', 'Внезапно — рывок 5 м.', 'Снова замедлись.'],
+    tip: 'Рывок начинается с длинного касания внешней стороной.' },
+  { id: 'd-headup', c: 'dribble', l: 2, n: 'Дриблинг с поднятой головой', en: 'Head up dribbling',
+    d: 'Веди мяч и постоянно смотри вокруг: называй вслух предметы, цвета машин, деревья.',
+    st: ['Веди мяч по площадке в разных направлениях.', 'Каждые 2 секунды поднимай взгляд и называй, что видишь.', 'Мяч контролируешь периферийным зрением.'],
+    tip: 'Опусти взгляд только на момент касания.' },
+  { id: 'd-chops', c: 'dribble', l: 2, eq: ['cones'], n: 'Зигзаг со срезами', en: 'Zig-zag chops',
+    d: 'Фишки зигзагом через 3 м. У каждой — срез мяча внутренней стороной и смена направления.',
+    st: ['Разбегись к фишке.', 'Срежь мяч внутренней стороной дальней ноги.', 'Ускорься к следующей фишке.'],
+    tip: 'Перед срезом опусти центр тяжести.' },
+  { id: 'd-sole-slalom', c: 'dribble', l: 3, eq: ['cones'], n: 'Слалом подошвой боком', en: 'Sole roll slalom',
+    d: 'Идёшь боком вдоль ряда фишек, прокатывая мяч подошвой между ними.',
+    st: ['Стань боком к ряду фишек.', 'Прокатывай мяч подошвой, переступая приставным шагом.', 'Обратно — другой ногой.'],
+    tip: 'Очень мелкие шаги, мяч прилип к подошве.' },
+  { id: 'd-star', c: 'dribble', l: 2, eq: ['cones'], n: 'Звезда', en: 'Star dribbling drill',
+    d: 'Одна фишка в центре, 5 по кругу в 4 м. От центра к каждой и обратно.',
+    st: ['Из центра веди к внешней фишке.', 'Разворот, возврат в центр.', 'Следующая фишка — другой разворот.'],
+    tip: 'Считай время на полный круг и улучшай.' },
+  { id: 'd-tight', c: 'dribble', l: 2, n: 'Дриблинг в тесноте', en: 'Tight space dribbling',
+    d: 'Квадрат 3×3 м: постоянно меняй направление, каждые 5 секунд — финт.',
+    st: ['Веди мяч внутри маленького квадрата.', 'Не выходи за границы.', 'Каждые 5 секунд — любой финт или разворот.'],
+    tip: 'Представь, что со всех сторон соперники.' },
+
+  // ---------- Финты ----------
+  { id: 'f-stepover', c: 'feint', l: 1, n: 'Ножницы', en: 'Step over, scissors', s: true,
+    d: 'Проносишь ногу над мячом снаружи внутрь, уходишь внешней стороной другой ноги.',
+    st: ['Веди мяч вперёд.', 'Правой ногой обведи мяч снаружи внутрь (не касаясь).', 'Опусти её, перенеси вес и уйди с мячом внешней стороной левой влево.'],
+    tip: 'Наклоняй корпус вместе с ногой — обманывает именно плечо.' },
+  { id: 'f-double', c: 'feint', l: 2, n: 'Двойные ножницы', en: 'Double step over',
+    d: 'Два «ножницы» подряд — правой и левой, затем уход в сторону.',
+    st: ['Ножницы правой.', 'Сразу ножницы левой.', 'Уход внешней стороной правой вправо.'],
+    tip: 'Движения быстрые и мелкие, мяч остаётся на месте.' },
+  { id: 'f-reverse', c: 'feint', l: 2, n: 'Обратные ножницы', en: 'Reverse step over', s: true,
+    d: 'Нога обводит мяч изнутри наружу, уход в противоположную сторону.',
+    st: ['Правой ногой обведи мяч изнутри наружу.', 'Поставь её справа от мяча.', 'Уходи внешней стороной левой влево.'],
+    tip: 'Хорошо работает после обычных ножниц.' },
+  { id: 'f-body', c: 'feint', l: 1, n: 'Финт корпусом', en: 'Body feint, shoulder drop', s: true,
+    d: 'Ложный шаг и наклон плеча в одну сторону, уход — в другую.',
+    st: ['Сделай шаг левой влево и наклони плечо.', 'Не трогая мяч, оттолкнись левой.', 'Уводи мяч внешней стороной правой вправо.'],
+    tip: 'Чем убедительнее плечо, тем лучше финт.' },
+  { id: 'f-matthews', c: 'feint', l: 2, n: 'Финт Мэтьюза', en: 'Matthews move', s: true,
+    d: 'Касание внутренней стороной внутрь с наклоном — и резкий уход внешней стороной той же ноги наружу.',
+    st: ['Мелкое касание мяча правой щёчкой влево, корпус наклонён влево.', 'Приземлись на левую.', 'Резко уведи мяч внешней стороной правой вправо.'],
+    tip: 'Два касания одной ногой с минимальной паузой.' },
+  { id: 'f-fakeshot', c: 'feint', l: 1, n: 'Ложный удар', en: 'Fake shot', s: true,
+    d: 'Замах как на удар, а затем уход с мячом внутренней стороной под другую ногу.',
+    st: ['Разбег и широкий замах.', 'Над мячом останови ногу.', 'Протащи мяч щёчкой вбок и уходи.'],
+    tip: 'Замах должен выглядеть как настоящий — смотри на цель.' },
+  { id: 'f-fakepass', c: 'feint', l: 1, n: 'Ложный пас', en: 'Fake pass', s: true,
+    d: 'Замах на пас внутренней стороной, проносишь ногу и уводишь мяч внешней.',
+    st: ['Разверни корпус и стопу как на пас.', 'Пронеси ногу мимо мяча.', 'Уведи мяч внешней стороной той же ноги.'],
+    tip: 'Смотри на воображаемого партнёра.' },
+  { id: 'f-stopgo', c: 'feint', l: 1, n: 'Стоп-энд-гоу', en: 'Stop and go',
+    d: 'На скорости останавливаешь мяч подошвой, делаешь паузу и снова ускоряешься.',
+    st: ['Веди мяч на скорости.', 'Наступи на мяч подошвой, замри.', 'Сразу толкни его вперёд и ускорься.'],
+    tip: 'Во время паузы можно сделать ложный разворот корпусом.' },
+  { id: 'f-pausa', c: 'feint', l: 2, n: 'Пауза (как Месси)', en: 'La pausa',
+    d: 'Резко сбрасываешь темп почти до нуля, «усыпляешь» защитника — и взрыв.',
+    st: ['Веди мяч в среднем темпе.', 'Почти остановись, делая мелкие касания.', 'Резкий рывок длинным касанием.'],
+    tip: 'Меняй не только скорость, но и направление на рывке.' },
+  { id: 'f-croqueta', c: 'feint', l: 2, n: 'Ла Крокета', en: 'La croqueta (Iniesta)',
+    d: 'Быстрый перекат мяча щёчкой с одной ноги на другую в сторону, как делал Иньеста.',
+    st: ['Веди мяч, приближаясь к «защитнику».', 'Щёчкой правой прокинь мяч к левой.', 'Левая сразу ведёт мяч дальше в сторону.'],
+    tip: 'Два касания почти одновременно, в прыжке-шаге.' },
+  { id: 'f-roll-out', c: 'feint', l: 2, n: 'Перекат + внешняя', en: 'Roll and outside cut', s: true,
+    d: 'Перекатываешь мяч подошвой поперёк себя и уводишь внешней стороной той же ноги вперёд.',
+    st: ['Перекати мяч подошвой правой влево.', 'Переступи и приземлись на левую.', 'Внешней стороной правой отправь мяч по диагонали вперёд.'],
+    tip: 'Сочетание горизонтального движения с рывком вперёд.' },
+  { id: 'f-elastico', c: 'feint', l: 3, n: 'Эластико (флип-флап)', en: 'Elastico, flip flap', s: true,
+    d: 'Толкаешь мяч внешней стороной наружу и мгновенно забираешь внутренней внутрь — одним движением.',
+    st: ['Начни медленно: касание внешней стороной вправо.', 'Не отрывая стопу, обведи мяч и верни его щёчкой влево.', 'Постепенно ускоряй до одного «хлёсткого» движения.'],
+    tip: 'Первое касание мягкое и короткое — мяч почти не катится.' },
+  { id: 'f-roulette', c: 'feint', l: 3, n: 'Марсельская рулетка', en: 'Marseille turn, Zidane roulette', s: true,
+    d: 'Разворот на 360° с двумя касаниями подошвой, как у Зидана.',
+    st: ['Наступи на мяч подошвой правой и потяни назад, разворачиваясь.', 'Приземлись правой, продолжай вращение спиной.', 'Подошвой левой протяни мяч дальше и выходи лицом вперёд.'],
+    tip: 'Корпус закрывает мяч от соперника на всём развороте.' },
+  { id: 'f-rainbow', c: 'feint', l: 3, n: 'Радуга', en: 'Rainbow flick',
+    d: 'Мяч зажимается между стоп и перебрасывается пяткой через голову вперёд.',
+    st: ['Мяч между стопами: подъём задней ноги сзади, пятка передней спереди.', 'Задней ногой накати мяч на пятку.', 'Пяткой подбрось мяч вверх и вперёд над собой.'],
+    tip: 'Сначала учись на месте, потом в движении.' },
+  { id: 'f-sombrero', c: 'feint', l: 3, n: 'Сомбреро', en: 'Sombrero flick',
+    d: 'Перебрасываешь мяч над воображаемым соперником и забираешь за его спиной.',
+    st: ['Мяч в воздухе или на подъёме.', 'Мягко подбрось его вверх и вперёд.', 'Обеги «соперника» и прими мяч.'],
+    tip: 'Тренируй с подброса рукой, затем после набивания.' },
+  { id: 'f-rabona', c: 'feint', l: 3, n: 'Рабона', en: 'Rabona', s: true,
+    d: 'Удар или пас, где бьющая нога заходит за опорную.',
+    st: ['Поставь опорную ногу чуть сбоку-впереди мяча.', 'Бьющей ногой обведи опорную сзади.', 'Ударь по мячу внутренней частью подъёма.'],
+    tip: 'Сначала пасуй на короткое расстояние в стену.' },
+  { id: 'f-heelchop', c: 'feint', l: 3, n: 'Пяточный срез', en: 'Heel chop', s: true,
+    d: 'Пяткой срезаешь мяч за опорную ногу и уходишь в обратном направлении.',
+    st: ['Веди мяч, опорная нога чуть впереди мяча.', 'Пяткой ударной ноги толкни мяч за опорную.', 'Развернись и уходи с мячом.'],
+    tip: 'Работает при уходе от защитника сбоку.' },
+  { id: 'f-combo1', c: 'feint', l: 2, n: 'Связка: ложный удар → Кройф', en: 'Fake shot Cruyff combo', s: true,
+    d: 'Ложный замах, разворот Кройфа, ускорение.',
+    st: ['Замахнись для удара.', 'Уводи мяч за опорную ногу (Кройф).', 'Ускорение 5 метров.'],
+    tip: 'Выполняй на скорости, иначе связка бесполезна.' },
+  { id: 'f-combo2', c: 'feint', l: 3, n: 'Связка: ножницы → Ла Крокета', en: 'Step over croqueta combo',
+    d: 'Ножницы, затем крокета в ту же сторону, куда показал.',
+    st: ['Ножницы правой (показываешь влево).', 'Приземлись и сразу сделай крокету влево.', 'Ускорение.'],
+    tip: 'Соперник ждёт ухода вправо — а ты идёшь туда, куда показал.' },
+  { id: 'f-combo3', c: 'feint', l: 3, n: 'Связка: Мэтьюз → эластико', en: 'Matthews elastico combo',
+    d: 'Два обманных движения подряд одной ногой.',
+    st: ['Мэтьюз: касание щёчкой внутрь.', 'Сразу эластико: наружу-внутрь.', 'Рывок.'],
+    tip: 'Для продвинутых: сначала отточи каждый финт отдельно.' },
+
+  // ---------- Развороты ----------
+  { id: 't-cruyff', c: 'turn', l: 1, n: 'Разворот Кройфа', en: 'Cruyff turn', s: true,
+    d: 'Показываешь удар или пас, а внутренней стороной уводишь мяч за опорную ногу.',
+    st: ['Опорная нога рядом с мячом.', 'Замах как на удар.', 'Внутренней стороной протолкни мяч назад за опорную ногу.', 'Развернись и уходи.'],
+    tip: 'Самый полезный разворот в игре — отрабатывай обеими ногами.' },
+  { id: 't-dragback', c: 'turn', l: 1, n: 'Разворот подошвой', en: 'Drag back turn', s: true,
+    d: 'Тянешь мяч подошвой назад и разворачиваешься на 180°.',
+    st: ['Веди мяч.', 'Наступи на мяч и потяни назад.', 'Развернись через плечо ведущей ноги и веди мяч обратно.'],
+    tip: 'Корпус между мячом и соперником.' },
+  { id: 't-inside', c: 'turn', l: 1, n: 'Разворот «щёчкой»', en: 'Inside hook turn', s: true,
+    d: 'Резкий поворот, мяч разворачивается внутренней стороной.',
+    st: ['Веди мяч, шаг опорной ногой за мяч.', 'Внутренней стороной ведущей ноги зацепи мяч.', 'Разверни его на 180°.'],
+    tip: 'Колени согнуты, центр тяжести низко.' },
+  { id: 't-outside', c: 'turn', l: 1, n: 'Разворот внешней стороной', en: 'Outside hook turn', s: true,
+    d: 'Мяч разворачивается внешней стороной стопы в сторону ведущей ноги.',
+    st: ['Веди мяч.', 'Выстави ведущую ногу вперёд-вбок от мяча.', 'Внешней стороной зацепи и разверни мяч.'],
+    tip: 'Развернись вокруг мяча, а не мяч вокруг себя.' },
+  { id: 't-chop', c: 'turn', l: 2, n: 'Срез за опорную (чоп)', en: 'Chop', s: true,
+    d: 'Внутренней стороной срезаешь мяч за опорную ногу — любимый приём Роналду на фланге.',
+    st: ['Разгонись с мячом.', 'Опорная нога проходит чуть дальше мяча.', 'Внутренней стороной другой ноги сруби мяч назад-вбок.'],
+    tip: 'Резко погаси скорость, чтобы соперник проскочил.' },
+  { id: 't-behind', c: 'turn', l: 2, n: 'Разворот за опорную ногу', en: 'Behind the leg turn', s: true,
+    d: 'Уводишь мяч внутренней стороной за опорную ногу и разворачиваешься.',
+    st: ['Опорная нога ставится впереди мяча.', 'Внутренней стороной отправь мяч за неё.', 'Развернись и продолжай ведение.'],
+    tip: 'Опорная нога ставится с небольшим разворотом.' },
+  { id: 't-stepon', c: 'turn', l: 1, n: 'Стоп-разворот', en: 'Step on turn', s: true,
+    d: 'Наступаешь на мяч подошвой, перешагиваешь его и разворачиваешься другой ногой.',
+    st: ['Наступи на мяч.', 'Перенеси вес и шагни вперёд за мяч.', 'Развернись и забери мяч другой ногой.'],
+    tip: 'Мяч остаётся на месте — двигается только тело.' },
+  { id: 't-heel', c: 'turn', l: 2, n: 'Разворот пяткой', en: 'Heel turn',
+    d: 'Пяткой отправляешь мяч назад, разворачиваешься и забираешь.',
+    st: ['Веди мяч, шагни над ним.', 'Пяткой откати мяч назад.', 'Развернись и уходи.'],
+    tip: 'Мяч должен откатиться недалеко — на 1 метр.' },
+  { id: 't-shuttle', c: 'turn', l: 2, eq: ['cones'], n: 'Челнок с разворотами', en: 'Turning shuttle',
+    d: 'Две фишки через 5 м. У каждой фишки — новый разворот.',
+    st: ['Веди мяч к фишке.', 'Разворот (каждый раз другой).', 'Ускорение к другой фишке.'],
+    tip: 'Используй Кройфа, подошву, щёчку, внешнюю, чоп по очереди.' },
+
+  // ---------- Пас и приём (стенка) ----------
+  { id: 'w-pass', c: 'wall', l: 1, eq: ['wall'], n: 'Пас в стену и приём', en: 'Wall passing two touch', s: true,
+    d: 'Пас щёчкой в стену с 4–5 м, приём, снова пас. Два касания.',
+    st: ['Стань в 4–5 метрах от стены.', 'Пас внутренней стороной.', 'Прими мяч и отдай снова.'],
+    tip: 'Голеностоп зафиксирован, бей по центру мяча.' },
+  { id: 'w-onetouch', c: 'wall', l: 2, eq: ['wall'], n: 'Стенка в одно касание', en: 'One touch wall passing',
+    d: 'Пасы в стену без остановки мяча, чередуя ноги.',
+    st: ['Пас правой.', 'Мяч возвращается — сразу пас левой.', 'Держи ритм.'],
+    tip: 'Стоишь на носках, до касания делаешь мелкие подшаги.' },
+  { id: 'w-outside', c: 'wall', l: 2, eq: ['wall'], n: 'Приём внешней с уходом', en: 'Outside foot receiving', s: true,
+    d: 'Принимаешь мяч внешней стороной и сразу уводишь его в сторону.',
+    st: ['Пас в стену.', 'Прими мяч внешней стороной, отводя его вбок.', 'Два шага с мячом и снова пас.'],
+    tip: 'Приём — это уже первое движение в атаку.' },
+  { id: 'w-open', c: 'wall', l: 2, eq: ['wall'], n: 'Приём с разворотом', en: 'Receiving on the half turn', s: true,
+    d: 'Принимаешь дальней ногой, открывая корпус и разворачиваясь.',
+    st: ['Пас в стену под углом.', 'Прими мяч дальней от стены ногой.', 'Первым касанием развернись на 90°.'],
+    tip: 'Перед приёмом посмотри через плечо.' },
+  { id: 'w-sole', c: 'wall', l: 1, eq: ['wall'], n: 'Приём подошвой', en: 'Sole receiving', s: true,
+    d: 'Останавливаешь мяч от стены подошвой и сразу отдаёшь.',
+    st: ['Пас в стену.', 'Останови мяч подошвой.', 'Скати его в сторону и отдай пас.'],
+    tip: 'Подошва слегка наклонена, чтобы мяч не выскочил.' },
+  { id: 'w-weak', c: 'wall', l: 1, eq: ['wall'], n: 'Пас слабой ногой', en: 'Weak foot passing',
+    d: 'Весь подход — только слабой ногой: и пас, и приём.',
+    st: ['Пас и приём только слабой ногой.', 'Начни с 3 метров, отходи дальше.'],
+    tip: 'Больше повторений — меньше разница между ногами.' },
+  { id: 'w-lofted', c: 'wall', l: 3, eq: ['wall'], n: 'Навес в стену + приём бедром/грудью', en: 'Lofted pass chest control',
+    d: 'Пас подъёмом по высокой траектории в стену, принимаешь отскок бедром или грудью.',
+    st: ['Стань в 8–10 м.', 'Пас подъёмом с подсечкой — мяч летит в верх стены.', 'Прими отскок бедром или грудью, опусти мяч.'],
+    tip: 'На приёме грудью прогнись назад, «гасишь» мяч.' },
+  { id: 'w-air', c: 'wall', l: 2, n: 'Приём мяча с воздуха', en: 'Aerial ball control', s: true,
+    d: 'Подбрасываешь мяч руками и принимаешь: щёчкой, подъёмом, бедром, внешней.',
+    st: ['Подбрось мяч выше головы.', 'Прими его одним касанием так, чтобы он остался рядом.', 'Каждые 5 повторов меняй способ приёма.'],
+    tip: 'Встречай мяч и уводи ногу вниз-назад вместе с ним.' },
+  { id: 'w-target', c: 'wall', l: 2, eq: ['wall'], n: 'Пас в мишень', en: 'Target passing',
+    d: 'Обозначь на стене мишень (скотч, мел) и попадай с разных дистанций.',
+    st: ['Мишень ~50×50 см.', 'По 5 пасов с 5, 8 и 12 метров.', 'Считай попадания.'],
+    tip: 'Точность важнее силы.' },
+  { id: 'w-speed', c: 'wall', l: 2, eq: ['wall'], n: 'Скоростная стенка', en: 'Rapid fire wall passing',
+    d: 'Максимум пасов в стену за время подхода с 2–3 метров.',
+    st: ['Стань близко к стене.', 'Отдавай пасы как можно быстрее, любыми ногами.', 'Считай пасы — это твой рекорд.'],
+    tip: 'Мелкие шаги, ноги всё время в движении.' },
+  { id: 'w-outpass', c: 'wall', l: 3, eq: ['wall'], n: 'Пас внешней стороной', en: 'Outside foot pass', s: true,
+    d: 'Пас «шведкой» — внешней стороной стопы, в том числе с подкруткой.',
+    st: ['Мяч чуть впереди и сбоку от опорной ноги.', 'Стопа развёрнута внутрь, удар внешней стороной.', 'Попробуй закрутить мяч в стену под углом.'],
+    tip: 'Удар коротким движением от колена.' },
+
+  // ---------- Удары ----------
+  { id: 's-place', c: 'shot', l: 1, eq: ['wall'], n: 'Удар щёчкой в угол', en: 'Side foot placement shot', s: true,
+    d: 'Точный удар внутренней стороной в угол ворот или в мишень на стене.',
+    st: ['11–16 м до цели.', 'Опорная нога рядом с мячом, носок в цель.', 'Удар щёчкой в нижний угол.'],
+    tip: 'Точность важнее силы — вратарь не достанет удар в угол.' },
+  { id: 's-laces', c: 'shot', l: 2, eq: ['wall'], n: 'Удар подъёмом', en: 'Laces shot, power shot', s: true,
+    d: 'Мощный удар шнурками, корпус над мячом.',
+    st: ['Разбег 3–4 шага под небольшим углом.', 'Опорная нога рядом с мячом.', 'Носок вниз, удар шнурками по центру мяча, приземлись на бьющую ногу.'],
+    tip: 'Наклонись вперёд — тогда мяч не улетит выше ворот.' },
+  { id: 's-weak', c: 'shot', l: 2, eq: ['wall'], n: 'Удары слабой ногой', en: 'Weak foot shooting',
+    d: 'Серия ударов только слабой ногой: щёчкой и подъёмом.',
+    st: ['5 ударов щёчкой.', '5 ударов подъёмом.', 'Повтори.'],
+    tip: 'Начинай с 8–10 метров.' },
+  { id: 's-curl', c: 'shot', l: 2, eq: ['wall'], n: 'Закрученный удар', en: 'Curled finesse shot', s: true,
+    d: 'Удар внутренней частью подъёма с вращением мяча в дальний угол.',
+    st: ['Разбег под углом ~45°.', 'Бей внутренней частью подъёма по нижней половине мяча сбоку.', 'Нога продолжает движение поперёк тела.'],
+    tip: 'Цель — чуть за пределами штанги, мяч закрутится внутрь.' },
+  { id: 's-volley', c: 'shot', l: 3, eq: ['wall'], n: 'Удар с лёта', en: 'Volley', s: true,
+    d: 'Подбрасываешь мяч и бьёшь, не давая ему коснуться земли.',
+    st: ['Подбрось мяч перед собой.', 'Колено над мячом, носок вниз.', 'Удар подъёмом в центр мяча.'],
+    tip: 'Смотри на мяч до самого удара.' },
+  { id: 's-halfvolley', c: 'shot', l: 3, eq: ['wall'], n: 'Удар с полулёта', en: 'Half volley', s: true,
+    d: 'Удар в момент отскока мяча от земли.',
+    st: ['Урони мяч с рук.', 'Бей сразу после отскока.', 'Корпус над мячом.'],
+    tip: 'Самый низкий и плотный удар — отлично для паса в стену.' },
+  { id: 's-afterfeint', c: 'shot', l: 2, eq: ['wall'], n: 'Удар после финта', en: 'Skill move and shoot',
+    d: 'Ножницы или финт корпусом — касание на удобную ногу — удар.',
+    st: ['Веди мяч к цели.', 'Финт и уход в сторону.', 'Удар вторым касанием.'],
+    tip: 'Касание после финта ставь чуть впереди, под удар.' },
+  { id: 's-afterturn', c: 'shot', l: 2, eq: ['wall'], n: 'Удар после разворота', en: 'Turn and shoot',
+    d: 'Стоишь спиной к цели, разворот и удар.',
+    st: ['Спиной к воротам, мяч под ногой.', 'Разворот (Кройф, подошвой, внешней).', 'Удар в два касания.'],
+    tip: 'Посмотри на цель во время разворота, а не после.' },
+  { id: 's-onetime', c: 'shot', l: 2, eq: ['wall'], n: 'Удар в одно касание', en: 'First time shot',
+    d: 'Пас в стену — удар по отскоку без обработки.',
+    st: ['Пас в стену.', 'По возвращению — сразу удар в угол или мишень.'],
+    tip: 'Подготовь опорную ногу заранее.' },
+  { id: 's-chip', c: 'shot', l: 3, eq: ['wall'], n: 'Подсечка (парашют)', en: 'Chip shot',
+    d: 'Удар под мяч коротким движением — мяч летит по крутой дуге.',
+    st: ['Опорная нога рядом с мячом.', 'Носок поддевает мяч снизу.', 'Короткое движение без замаха.'],
+    tip: 'Цель — перебросить воображаемого вратаря.' },
+
+  // ---------- Ловкость ----------
+  { id: 'a-sidejump', c: 'fit', l: 1, n: 'Прыжки через мяч в сторону', en: 'Lateral ball hops',
+    d: 'Быстрые прыжки двумя ногами влево-вправо через мяч.',
+    st: ['Мяч сбоку от тебя.', 'Прыгай через него вправо-влево.', 'Приземление на носки.'],
+    tip: 'Мягкое приземление, руки помогают.' },
+  { id: 'a-fwdjump', c: 'fit', l: 1, n: 'Прыжки вперёд-назад', en: 'Forward back ball hops',
+    d: 'Прыжки через мяч вперёд и назад.',
+    st: ['Стань перед мячом.', 'Прыжок вперёд через мяч.', 'Прыжок назад.'],
+    tip: 'Минимальное время на земле.' },
+  { id: 'a-taps-sprint', c: 'fit', l: 2, n: 'Тык-так + рывок', en: 'Toe taps and sprint',
+    d: '10 секунд тык-так в максимальном темпе, затем рывок с мячом 5–10 метров.',
+    st: ['10 секунд тык-так.', 'Рывок с мячом.', 'Возвращайся и повторяй.'],
+    tip: 'Первое касание рывка — длинное, шнурками.' },
+  { id: 'a-getup', c: 'fit', l: 2, n: 'Подъём с земли и рывок', en: 'Get up and sprint',
+    d: 'Ложишься на живот, мяч впереди; вскакиваешь и уводишь мяч рывком.',
+    st: ['Ляг на живот, мяч в 2 метрах.', 'Максимально быстро встань.', 'Рывок с мячом 10 м.'],
+    tip: 'Выполняй по своему сигналу: хлопок или счёт.' },
+  { id: 'a-lunge', c: 'fit', l: 2, n: 'Выпады с перекатом мяча', en: 'Lunges with ball roll',
+    d: 'Выпады, прокатывая мяч рукой под передней ногой.',
+    st: ['Выпад вперёд.', 'Прокати мяч рукой под передней ногой к другой руке.', 'Смени ногу.'],
+    tip: 'Спина прямая, колено не выходит за носок.' },
+  { id: 'a-chase', c: 'fit', l: 2, n: 'Бросок и догон', en: 'Throw and chase',
+    d: 'Бросаешь мяч вперёд руками, догоняешь и останавливаешь подошвой до второго отскока.',
+    st: ['Брось мяч вперёд-вверх.', 'Рывок за ним.', 'Останови до второго отскока, веди назад.'],
+    tip: 'Меняй способ остановки: подошва, щёчка, бедро.' },
+  { id: 'a-plank', c: 'fit', l: 1, n: 'Планка с касаниями мяча', en: 'Plank ball taps',
+    d: 'Планка на прямых руках, поочерёдно касаешься мяча перед собой рукой.',
+    st: ['Упор лёжа, мяч перед головой.', 'Коснись мяча правой рукой, затем левой.', 'Таз не раскачивается.'],
+    tip: 'Работает пресс и стабилизация — важно для баланса в финтах.' },
+  { id: 'a-squat', c: 'fit', l: 1, n: 'Приседания с мячом', en: 'Ball overhead squats',
+    d: 'Приседания с мячом на вытянутых руках над головой.',
+    st: ['Мяч над головой.', 'Глубокий присед, спина прямая.', 'Встань, выталкивая мяч вверх.'],
+    tip: 'Пятки не отрываются от земли.' },
+];
+
+const EX_BY_ID = Object.fromEntries(EX.map((e) => [e.id, e]));
+
+const FOCUS = {
+  mix:     ['control', 'juggle', 'dribble', 'feint', 'turn', 'wall', 'shot', 'fit'],
+  skills:  ['feint', 'turn'],
+  touch:   ['control', 'juggle'],
+  dribble: ['dribble', 'feint', 'turn'],
+  strike:  ['wall', 'shot'],
+};
+
+/* =========================================================================
+   Storage
+   ========================================================================= */
+const KEY = 'football-solo-v1';
+const DEFAULTS = {
+  opts: { minutes: 20, level: 1, focus: 'mix', interval: '45/15', wall: false, cones: false, voice: true },
+  coach: { tempo: 'mid', dur: 120, off: [] },
+  favs: [],
+  done: {},       // id -> times completed
+  history: [],    // { ts, sec, n, title }
+  juggles: [],    // { ts, n }
+};
+let S;
+try { S = Object.assign(structuredClone(DEFAULTS), JSON.parse(localStorage.getItem(KEY) || '{}')); }
+catch (e) { S = structuredClone(DEFAULTS); }
+S.opts = Object.assign({}, DEFAULTS.opts, S.opts);
+S.coach = Object.assign({}, DEFAULTS.coach, S.coach);
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable */ } }
+
+/* =========================================================================
+   Helpers
+   ========================================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const lvlHtml = (l) => `<span class="lvl">${[1, 2, 3].map((i) => `<i class="${i <= l ? 'on' : ''}"></i>`).join('')}</span>`;
+const LVL_NAME = ['', 'Новичок', 'Средний', 'Продвинутый'];
+const fmt = (sec) => { sec = Math.max(0, Math.ceil(sec)); const m = Math.floor(sec / 60); return m ? `${m}:${String(sec % 60).padStart(2, '0')}` : String(sec); };
+const fmtMin = (sec) => `${Math.round(sec / 60)} мин`;
+function toast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 1800);
+}
+
+/* ----- Sound & voice ----- */
+let actx;
+function beep(freq = 880, dur = 0.15, vol = 0.25) {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.frequency.value = freq; o.type = 'sine';
+    g.gain.setValueAtTime(vol, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
+    o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + dur);
+  } catch (e) { /* no audio */ }
+}
+function whistle() { beep(1400, 0.12, 0.3); setTimeout(() => beep(1400, 0.35, 0.3), 160); }
+let ruVoice = null;
+function pickVoice() {
+  if (!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  ruVoice = vs.find((v) => v.lang === 'ru-RU' && /Milena|Yuri|Google/i.test(v.name)) || vs.find((v) => v.lang && v.lang.startsWith('ru')) || null;
+}
+if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function say(text, force) {
+  if (!('speechSynthesis' in window) || (!S.opts.voice && !force)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ru-RU'; if (ruVoice) u.voice = ruVoice; u.rate = 1.05;
+  speechSynthesis.speak(u);
+}
+
+/* ----- Screen wake lock ----- */
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (on && 'wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch (e) { /* not allowed */ }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (run || coach)) keepAwake(true); });
+
+/* =========================================================================
+   Tabs
+   ========================================================================= */
+function showTab(name) {
+  $$('nav.tabs button').forEach((b) => b.classList.toggle('active', b.dataset.tab === name));
+  $$('section[id^="tab-"]').forEach((s) => { s.hidden = s.id !== 'tab-' + name; });
+  if (name === 'stats') renderStats();
+  if (name === 'lib') renderLib();
+  window.scrollTo(0, 0);
+}
+$$('nav.tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+/* =========================================================================
+   Workout setup
+   ========================================================================= */
+function syncSetup() {
+  $$('#setup .seg[data-opt]').forEach((seg) => {
+    const k = seg.dataset.opt;
+    $$('button', seg).forEach((b) => b.classList.toggle('on', String(S.opts[k]) === b.dataset.v));
+  });
+  $$('#setup input[data-opt]').forEach((i) => { i.checked = !!S.opts[i.dataset.opt]; });
+}
+$$('#setup .seg[data-opt]').forEach((seg) => seg.addEventListener('click', (ev) => {
+  const b = ev.target.closest('button'); if (!b) return;
+  const k = seg.dataset.opt; const v = b.dataset.v;
+  S.opts[k] = (k === 'minutes' || k === 'level') ? Number(v) : v;
+  save(); syncSetup();
+}));
+$$('#setup input[data-opt]').forEach((i) => i.addEventListener('change', () => { S.opts[i.dataset.opt] = i.checked; save(); }));
+
+function available(e, o) {
+  if (e.l > o.level) return false;
+  for (const q of e.eq || []) if (!o[q]) return false;
+  return true;
+}
+
+// Builds a list of { id, work } that fills the chosen time.
+function buildWorkout(o) {
+  const [work, rest] = o.interval.split('/').map(Number);
+  const target = o.minutes * 60;
+  const cats = FOCUS[o.focus];
+  const pool = EX.filter((e) => available(e, o));
+  const warm = shuffle(pool.filter((e) => e.c === 'control' && e.l === 1)).slice(0, o.minutes >= 20 ? 3 : 2);
+  // Prefer exercises at the chosen level, fall back to easier ones.
+  const main = shuffle(pool.filter((e) => cats.includes(e.c) && !warm.includes(e)))
+    .sort((a, b) => (b.l === o.level) - (a.l === o.level));
+  // Interleave categories so the session doesn't feel monotonous.
+  const byCat = {};
+  main.forEach((e) => (byCat[e.c] = byCat[e.c] || []).push(e));
+  const order = [];
+  const keys = shuffle(Object.keys(byCat));
+  while (keys.some((k) => byCat[k].length)) keys.forEach((k) => { if (byCat[k].length) order.push(byCat[k].shift()); });
+
+  const items = warm.map((e) => ({ id: e.id, work: Math.min(work, 40) }));
+  let total = items.reduce((s, it) => s + it.work + rest, 0);
+  let i = 0;
+  while (total < target && order.length) {
+    const e = order[i % order.length];
+    const w = e.s && work < 45 ? 45 : work; // two-footed drills need time for both sides
+    items.push({ id: e.id, work: w });
+    total += w + rest; i++;
+  }
+  return { items, rest };
+}
+
+let plan = null;
+function renderPlan() {
+  const list = $('#planList');
+  list.innerHTML = plan.items.map((it, idx) => {
+    const e = EX_BY_ID[it.id];
+    return `<li><span class="t"><b>${esc(e.n)}</b><span>${CATS[e.c].ic} ${CATS[e.c].name} · ${it.work} с${e.s ? ' · обе ноги' : ''}</span></span><button data-rm="${idx}" aria-label="Убрать">✕</button></li>`;
+  }).join('');
+  const sec = plan.items.reduce((s, it) => s + it.work + plan.rest, 0);
+  $('#planSummary').innerHTML = `<span><b>${plan.items.length}</b> упражнений</span><span><b>${fmtMin(sec)}</b></span><span>${LVL_NAME[S.opts.level]}</span>`;
+}
+$('#planList').addEventListener('click', (ev) => {
+  const b = ev.target.closest('[data-rm]'); if (!b) return;
+  plan.items.splice(Number(b.dataset.rm), 1);
+  if (!plan.items.length) { $('#planBack').click(); return; }
+  renderPlan();
+});
+$('#build').addEventListener('click', () => {
+  plan = buildWorkout(S.opts);
+  if (!plan.items.length) { toast('Нет подходящих упражнений'); return; }
+  $('#setup').hidden = true; $('#planView').hidden = false; renderPlan(); window.scrollTo(0, 0);
+});
+$('#planShuffle').addEventListener('click', () => { plan = buildWorkout(S.opts); renderPlan(); });
+$('#planBack').addEventListener('click', () => { $('#setup').hidden = false; $('#planView').hidden = true; });
+$('#planStart').addEventListener('click', () => startRun(plan.items, plan.rest, 'Тренировка'));
+
+/* =========================================================================
+   Player (workout timer)
+   ========================================================================= */
+let run = null;      // workout state
+let timerId = null;
+const ARC = 339.3;
+
+function startRun(items, rest, title) {
+  stopCoach();
+  run = { items, rest, title, i: 0, phase: 'prep', left: 8, dur: 8, paused: false, last: Date.now(), elapsed: 0, switched: false, done: [] };
+  $('#player').hidden = false; $('#pDone').hidden = true; $('#pLive').hidden = false; $('#pCtl').hidden = false;
+  $('#pCmd').hidden = true; $('.ring').hidden = false; $('#pPrev').hidden = false; $('#pSkip').hidden = false; $('#pCtl').style.gridTemplateColumns = '';
+  document.body.style.overflow = 'hidden';
+  keepAwake(true);
+  beep(660, 0.05, 0.01); // unlock audio on iOS inside the tap
+  const e = EX_BY_ID[items[0].id];
+  say(`Приготовься. ${e.n}`);
+  renderRun();
+  clearInterval(timerId); timerId = setInterval(tick, 200);
+}
+
+function tick() {
+  if (!run || run.paused) { if (run) run.last = Date.now(); return; }
+  const now = Date.now(); const dt = (now - run.last) / 1000; run.last = now;
+  const before = Math.ceil(run.left);
+  run.left -= dt;
+  if (run.phase === 'work') run.elapsed += dt;
+  const after = Math.ceil(run.left);
+  if (after !== before && after <= 3 && after > 0) beep(after === 1 ? 990 : 740, 0.12);
+  const it = run.items[run.i];
+  if (run.phase === 'work' && EX_BY_ID[it.id].s && !run.switched && run.left <= run.dur / 2) {
+    run.switched = true; beep(520, 0.2); say('Смени ногу');
+  }
+  if (run.left <= 0) nextPhase();
+  renderRun();
+}
+
+function nextPhase() {
+  const it = run.items[run.i];
+  if (run.phase === 'prep' || run.phase === 'rest') {
+    run.phase = 'work'; run.left = run.dur = it.work; run.switched = false;
+    whistle(); say('Старт');
+  } else if (run.phase === 'work') {
+    run.done.push(it.id);
+    if (run.i >= run.items.length - 1) { finishRun(); return; }
+    run.i++;
+    const n = EX_BY_ID[run.items[run.i].id];
+    run.phase = 'rest'; run.left = run.dur = Math.max(run.rest, 5);
+    beep(440, 0.4);
+    say(`Отдых. Далее: ${n.n}`);
+  }
+}
+
+function jump(delta) {
+  if (!run) return;
+  const ni = run.i + delta;
+  if (delta > 0 && run.phase === 'work') { nextPhase(); renderRun(); return; }
+  if (ni < 0 || ni >= run.items.length) { if (delta > 0) finishRun(); return; }
+  run.i = ni; run.phase = 'prep'; run.left = run.dur = 5; run.switched = false;
+  say(EX_BY_ID[run.items[ni].id].n);
+  renderRun();
+}
+
+function renderRun() {
+  if (!run) return;
+  const it = run.items[run.i]; const e = EX_BY_ID[it.id];
+  const labels = { prep: 'Приготовься', work: 'Работа', rest: 'Отдых' };
+  const ph = $('#pPhase'); ph.textContent = labels[run.phase]; ph.className = 'phase ' + run.phase;
+  $('#pNum').textContent = fmt(run.left);
+  $('#pArc').style.strokeDashoffset = String(ARC * (1 - Math.max(0, run.left) / run.dur));
+  $('#pArc').style.stroke = run.phase === 'work' ? 'var(--accent)' : 'var(--gold)';
+  $('#pCount').textContent = `${run.i + 1} / ${run.items.length}`;
+  const remaining = run.items.slice(run.i + 1).reduce((s, x) => s + x.work + run.rest, 0) + Math.max(0, run.left) + (run.phase !== 'work' ? it.work : 0);
+  $('#pTotal').textContent = `осталось ${fmt(remaining)}`;
+  $('#pBar').style.width = `${(run.i + (run.phase === 'work' ? 1 - run.left / run.dur : 0)) / run.items.length * 100}%`;
+  $('#pPlay').textContent = run.paused ? '▶' : '⏸';
+  if ($('#pName').dataset.id !== it.id + run.i) {
+    $('#pName').dataset.id = it.id + run.i;
+    $('#pName').textContent = e.n;
+    $('#pCat').textContent = `${CATS[e.c].ic} ${CATS[e.c].name}${e.s ? ' · обе ноги' : ''}`;
+    $('#pDesc').innerHTML = `<div class="small muted">${esc(e.d)}</div><ol>${e.st.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>`;
+    const nx = run.items[run.i + 1];
+    $('#pNext').innerHTML = nx ? `Далее: <b>${esc(EX_BY_ID[nx.id].n)}</b>` : 'Последнее упражнение!';
+  }
+}
+
+function finishRun() {
+  clearInterval(timerId);
+  whistle(); setTimeout(whistle, 500);
+  const n = run.done.length;
+  run.done.forEach((id) => { S.done[id] = (S.done[id] || 0) + 1; });
+  if (run.elapsed > 20) {
+    S.history.unshift({ ts: Date.now(), sec: Math.round(run.elapsed), n, title: run.title });
+    S.history = S.history.slice(0, 200);
+  }
+  save();
+  say(`Тренировка окончена. Отличная работа!`);
+  $('#pLive').hidden = true; $('#pCtl').hidden = true; $('#pDone').hidden = false;
+  $('#pDoneInfo').textContent = `${n} ${plural(n, 'упражнение', 'упражнения', 'упражнений')} · ${fmtMin(run.elapsed)} активной работы`;
+  $('#pBar').style.width = '100%';
+  run = null; keepAwake(false);
+}
+
+function closePlayer() {
+  if (run && run.elapsed > 60 && !confirm('Завершить тренировку? Прогресс будет сохранён.')) return;
+  if (run && run.elapsed > 60) { finishRun(); }
+  clearInterval(timerId); run = null; stopCoach();
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  $('#player').hidden = true; document.body.style.overflow = ''; keepAwake(false);
+}
+
+$('#pPlay').addEventListener('click', () => {
+  if (coach) { coach.paused = !coach.paused; renderCoach(); return; }
+  if (!run) return; run.paused = !run.paused; renderRun();
+});
+$('#pSkip').addEventListener('click', () => jump(1));
+$('#pPrev').addEventListener('click', () => jump(run && run.phase === 'work' && run.dur - run.left > 3 ? 0 : -1));
+$('#pClose').addEventListener('click', closePlayer);
+
+function plural(n, one, few, many) {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
+  return many;
+}
+
+/* =========================================================================
+   Library
+   ========================================================================= */
+let libCat = 'all', libLvl = 0;
+function renderCats() {
+  const chips = [['all', 'Все'], ['fav', '★ Избранное'], ...Object.entries(CATS).map(([k, v]) => [k, `${v.ic} ${v.name}`])];
+  $('#cats').innerHTML = chips.map(([k, t]) => `<button class="chipbtn ${k === libCat ? 'on' : ''}" data-c="${k}">${t}</button>`).join('');
+}
+$('#cats').addEventListener('click', (ev) => { const b = ev.target.closest('[data-c]'); if (!b) return; libCat = b.dataset.c; renderCats(); renderLib(); });
+$('#lvlFilter').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button'); if (!b) return; libLvl = Number(b.dataset.v);
+  $$('#lvlFilter button').forEach((x) => x.classList.toggle('on', x === b)); renderLib();
+});
+$('#q').addEventListener('input', () => renderLib());
+
+function renderLib() {
+  const q = $('#q').value.trim().toLowerCase();
+  const list = EX.filter((e) =>
+    (libCat === 'all' || (libCat === 'fav' ? S.favs.includes(e.id) : e.c === libCat)) &&
+    (!libLvl || e.l === libLvl) &&
+    (!q || (e.n + ' ' + e.en + ' ' + e.d + ' ' + CATS[e.c].name).toLowerCase().includes(q)));
+  $('#libCount').textContent = `${list.length} ${plural(list.length, 'упражнение', 'упражнения', 'упражнений')}`;
+  $('#exlist').innerHTML = list.map((e) => `
+    <button class="ex" data-id="${e.id}">
+      <span class="ic">${CATS[e.c].ic}</span>
+      <span class="t"><b>${esc(e.n)}</b><span>${lvlHtml(e.l)} ${CATS[e.c].name}${(e.eq || []).map((q) => ' · ' + EQ[q]).join('')}${S.done[e.id] ? ' · ✓ ' + S.done[e.id] : ''}</span></span>
+      ${S.favs.includes(e.id) ? '<span class="fav">★</span>' : ''}
+    </button>`).join('') || '<p class="muted">Ничего не найдено.</p>';
+}
+$('#exlist').addEventListener('click', (ev) => { const b = ev.target.closest('.ex'); if (b) openSheet(b.dataset.id); });
+
+function openSheet(id) {
+  const e = EX_BY_ID[id]; const fav = S.favs.includes(id);
+  const yt = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(e.en.split(',')[0] + ' football tutorial');
+  $('#sheetRoot').innerHTML = `
+    <div class="sheet-bg" id="sheetBg">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(e.n)}">
+        <div class="grab"></div>
+        <h2>${esc(e.n)}</h2>
+        <div class="en">${esc(e.en)}</div>
+        <div class="tags">
+          <span class="tag">${CATS[e.c].ic} <b>${CATS[e.c].name}</b></span>
+          <span class="tag">${lvlHtml(e.l)} <b>${LVL_NAME[e.l]}</b></span>
+          ${e.s ? '<span class="tag">🦶🦶 <b>Обе ноги</b></span>' : ''}
+          ${(e.eq || []).map((q) => `<span class="tag">Нужно: <b>${EQ[q]}</b></span>`).join('')}
+          ${S.done[id] ? `<span class="tag">Выполнено: <b>${S.done[id]}</b></span>` : ''}
+        </div>
+        <p>${esc(e.d)}</p>
+        <h3>Как выполнять</h3>
+        <ol class="steps">${e.st.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
+        <div class="tip">💡 ${esc(e.tip)}</div>
+        <div class="actions">
+          <button class="btn primary" id="shRun">▶ Таймер: 3 подхода по 45 с</button>
+          <div class="row">
+            <button class="btn ghost" id="shFav">${fav ? '★ В избранном' : '☆ В избранное'}</button>
+            <a class="btn ghost" href="${yt}" target="_blank" rel="noopener">▶ Видео</a>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  document.body.style.overflow = 'hidden';
+  $('#sheetBg').addEventListener('click', (ev) => { if (ev.target.id === 'sheetBg') closeSheet(); });
+  $('#shFav').addEventListener('click', () => {
+    const i = S.favs.indexOf(id); if (i >= 0) S.favs.splice(i, 1); else S.favs.push(id);
+    save(); renderLib(); openSheet(id);
+  });
+  $('#shRun').addEventListener('click', () => {
+    closeSheet();
+    startRun([0, 1, 2].map(() => ({ id, work: 45 })), 20, e.n);
+  });
+}
+function closeSheet() { $('#sheetRoot').innerHTML = ''; if ($('#player').hidden) document.body.style.overflow = ''; }
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeSheet(); });
+
+/* =========================================================================
+   Coach mode — random voice commands while dribbling
+   ========================================================================= */
+const COACH_EXTRA = ['Рывок!', 'Стоп!', 'Смени ногу!', 'Назад подошвой!'];
+const COACH_SHORT = {
+  'f-stepover': 'Ножницы', 'f-double': 'Двойные ножницы', 'f-reverse': 'Обратные ножницы', 'f-body': 'Финт корпусом',
+  'f-matthews': 'Мэтьюз', 'f-fakeshot': 'Ложный удар', 'f-fakepass': 'Ложный пас', 'f-stopgo': 'Стоп и рывок',
+  'f-pausa': 'Пауза', 'f-croqueta': 'Крокета', 'f-roll-out': 'Перекат и наружу', 'f-elastico': 'Эластико',
+  'f-roulette': 'Рулетка', 'f-heelchop': 'Пяточный срез',
+  't-cruyff': 'Кройф', 't-dragback': 'Разворот подошвой', 't-inside': 'Разворот щёчкой', 't-outside': 'Разворот внешней',
+  't-chop': 'Чоп', 't-behind': 'За опорную', 't-stepon': 'Стоп-разворот', 't-heel': 'Пяткой назад',
+};
+const COACH_CMDS = [...Object.keys(COACH_SHORT).map((id) => ({ k: id, t: COACH_SHORT[id], l: EX_BY_ID[id].l })), ...COACH_EXTRA.map((t) => ({ k: t, t, l: 1 }))];
+const TEMPO = { slow: [7, 10], mid: [4, 7], fast: [2, 4] };
+
+function syncCoach() {
+  $$('#tab-coach .seg[data-copt]').forEach((seg) => {
+    const k = seg.dataset.copt;
+    $$('button', seg).forEach((b) => b.classList.toggle('on', String(S.coach[k]) === b.dataset.v));
+  });
+  $('#coachMoves').innerHTML = COACH_CMDS.map((c) => `<button class="chipbtn ${S.coach.off.includes(c.k) ? '' : 'on'}" data-k="${esc(c.k)}">${esc(c.t)}</button>`).join('');
+}
+$$('#tab-coach .seg[data-copt]').forEach((seg) => seg.addEventListener('click', (ev) => {
+  const b = ev.target.closest('button'); if (!b) return;
+  const k = seg.dataset.copt; S.coach[k] = k === 'dur' ? Number(b.dataset.v) : b.dataset.v; save(); syncCoach();
+}));
+$('#coachMoves').addEventListener('click', (ev) => {
+  const b = ev.target.closest('[data-k]'); if (!b) return;
+  const k = b.dataset.k; const i = S.coach.off.indexOf(k);
+  if (i >= 0) S.coach.off.splice(i, 1); else S.coach.off.push(k);
+  save(); syncCoach();
+});
+
+let coach = null;
+function startCoach() {
+  const cmds = COACH_CMDS.filter((c) => !S.coach.off.includes(c.k));
+  if (cmds.length < 2) { toast('Выбери хотя бы 2 команды'); return; }
+  clearInterval(timerId); run = null;
+  coach = { cmds, left: S.coach.dur, dur: S.coach.dur, next: 5, prep: 5, paused: false, last: Date.now(), cmd: null, n: 0 };
+  $('#player').hidden = false; $('#pDone').hidden = true; $('#pLive').hidden = false; $('#pCtl').hidden = false;
+  $('#pCmd').hidden = false; $('.ring').hidden = true; $('#pPrev').hidden = true; $('#pSkip').hidden = true; $('#pCtl').style.gridTemplateColumns = '1fr';
+  $('#pName').textContent = ''; $('#pName').dataset.id = ''; $('#pCat').textContent = ''; $('#pNext').textContent = '';
+  $('#pDesc').innerHTML = '<div class="small muted">Веди мяч в свободном темпе. Как только услышишь команду — выполни её и продолжай вести.</div>';
+  document.body.style.overflow = 'hidden';
+  keepAwake(true); beep(660, 0.05, 0.01);
+  say('Веди мяч. Слушай команды.', true);
+  renderCoach();
+  timerId = setInterval(coachTick, 200);
+}
+function coachTick() {
+  if (!coach) return;
+  const now = Date.now(); const dt = (now - coach.last) / 1000; coach.last = now;
+  if (coach.paused) return;
+  if (coach.prep > 0) {
+    const b = Math.ceil(coach.prep); coach.prep -= dt; const a = Math.ceil(coach.prep);
+    if (a !== b && a > 0 && a <= 3) beep(740, 0.12);
+    if (coach.prep <= 0) { whistle(); coach.next = 1.5; }
+    renderCoach(); return;
+  }
+  coach.left -= dt; coach.next -= dt;
+  if (coach.left <= 0) { finishCoach(); return; }
+  if (coach.next <= 0) {
+    let c; do { c = coach.cmds[Math.floor(Math.random() * coach.cmds.length)]; } while (coach.cmd && c.k === coach.cmd.k);
+    coach.cmd = c; coach.n++;
+    const [a, b] = TEMPO[S.coach.tempo]; coach.next = a + Math.random() * (b - a);
+    say(c.t.replace('!', ''), true);
+    const el = $('#pCmd'); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  }
+  renderCoach();
+}
+function renderCoach() {
+  if (!coach) return;
+  const ph = $('#pPhase');
+  if (coach.prep > 0) { ph.textContent = 'Приготовься'; ph.className = 'phase prep'; $('#pCmd').textContent = fmt(coach.prep); }
+  else { ph.textContent = coach.paused ? 'Пауза' : 'Тренер'; ph.className = 'phase work'; $('#pCmd').textContent = coach.cmd ? coach.cmd.t : 'Веди мяч…'; }
+  $('#pCount').textContent = `команд: ${coach.n}`;
+  $('#pTotal').textContent = `осталось ${fmt(coach.left)}`;
+  $('#pBar').style.width = `${(1 - coach.left / coach.dur) * 100}%`;
+  $('#pPlay').textContent = coach.paused ? '▶' : '⏸';
+}
+function finishCoach() {
+  clearInterval(timerId);
+  S.history.unshift({ ts: Date.now(), sec: coach.dur - Math.max(0, coach.left), n: coach.n, title: 'Тренер: команды' });
+  save();
+  whistle(); say(`Готово! Ты выполнил ${coach.n} ${plural(coach.n, 'команду', 'команды', 'команд')}.`, true);
+  $('#pLive').hidden = true; $('#pCtl').hidden = true; $('#pDone').hidden = false;
+  $('#pDoneInfo').textContent = `${coach.n} ${plural(coach.n, 'команда', 'команды', 'команд')} за ${fmt(coach.dur)}`;
+  coach = null; keepAwake(false);
+}
+function stopCoach() { if (coach) { clearInterval(timerId); coach = null; } }
+$('#coachStart').addEventListener('click', startCoach);
+
+/* =========================================================================
+   Stats
+   ========================================================================= */
+function dayKey(ts) { const d = new Date(ts); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; }
+function streak() {
+  const days = new Set(S.history.map((h) => dayKey(h.ts)));
+  let n = 0; const d = new Date();
+  if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1); // streak still alive if you trained yesterday
+  while (days.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function renderStats() {
+  const totalSec = S.history.reduce((s, h) => s + h.sec, 0);
+  const totalEx = Object.values(S.done).reduce((s, n) => s + n, 0);
+  const tiles = [
+    [S.history.length, 'тренировок'], [Math.round(totalSec / 60), 'минут работы'],
+    [streak(), 'дней подряд'], [totalEx, 'упражнений выполнено'],
+  ];
+  $('#tiles').innerHTML = tiles.map(([v, t]) => `<div class="tile"><b>${v}</b><span>${t}</span></div>`).join('');
+  const dt = (ts) => new Date(ts).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  $('#hist').innerHTML = S.history.slice(0, 10).map((h) => `<li>${esc(h.title)} · ${fmtMin(h.sec)}<span>${dt(h.ts)}</span></li>`).join('') ||
+    '<li class="muted">Пока пусто — начни первую тренировку!</li>';
+  const best = S.juggles.reduce((m, j) => (j.n > (m ? m.n : 0) ? j : m), null);
+  $('#jBest').textContent = best ? best.n : 0;
+  $('#jBestInfo').textContent = best ? `лучший результат · ${dt(best.ts)}` : 'Запиши свой первый результат';
+  $('#jHist').innerHTML = S.juggles.slice(0, 5).map((j) => `<li>${j.n} ${plural(j.n, 'касание', 'касания', 'касаний')}<span>${dt(j.ts)}</span></li>`).join('');
+}
+$('#jSave').addEventListener('click', () => {
+  const n = parseInt($('#jInput').value, 10);
+  if (!n || n < 1) { toast('Введи число касаний'); return; }
+  const prev = S.juggles.reduce((m, j) => Math.max(m, j.n), 0);
+  S.juggles.unshift({ ts: Date.now(), n }); S.juggles = S.juggles.slice(0, 100); save();
+  $('#jInput').value = ''; renderStats();
+  toast(n > prev ? '🎉 Новый рекорд!' : 'Записано');
+});
+$('#reset').addEventListener('click', () => {
+  if (!confirm('Удалить всю историю, рекорды и избранное?')) return;
+  S = structuredClone(DEFAULTS); save(); syncSetup(); syncCoach(); renderStats(); toast('Данные сброшены');
+});
+
+/* =========================================================================
+   Init
+   ========================================================================= */
+syncSetup(); syncCoach(); renderCats(); renderLib();
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
