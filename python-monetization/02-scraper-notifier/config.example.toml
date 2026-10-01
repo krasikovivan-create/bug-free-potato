@@ -1,0 +1,41 @@
+# Пример настройки. Скопируй в config.toml и поправь под свой сайт:  cp config.example.toml config.toml
+# Проверить, что селекторы работают (без Telegram и без базы):      python scraper.py check
+
+# ============ Общие настройки (все необязательны) ============
+# ВАЖНО: эти строки должны стоять ВЫШЕ первого блока [[sources]].
+
+interval_minutes = 60        # как часто проверять сайты в режиме `run`
+request_delay = 2            # пауза в секундах между запросами к одному сайту
+# timeout = 20               # сколько секунд ждать ответ сайта
+# user_agent = "ScraperNotifier/1.0 (+ваш-email-для-связи)"
+# respect_robots = true      # соблюдать robots.txt; false — только для СВОИХ сайтов
+# notify_on_first_run = false  # false: первый проход лишь запоминает текущие объявления
+# db_path = "scraper.db"
+
+# ============ Источники: по одному блоку [[sources]] на сайт ============
+# Демо-магазин books.toscrape.com создан специально для тренировки парсеров.
+
+[[sources]]
+name = "Books demo"                          # название в уведомлении
+url = "https://books.toscrape.com/"          # страница со списком
+item = "article.product_pod"                 # CSS-селектор ОДНОГО объявления
+title = "h3 a"                               # дальше селекторы ищутся внутри объявления
+title_attr = "title"                         # заголовок лежит в атрибуте title (в тексте он обрезан)
+link = "h3 a"                                # ссылка (по умолчанию берётся атрибут href)
+price = "p.price_color"                      # цена (необязательно)
+next_page = "li.next a"                      # ссылка на следующую страницу (необязательно)
+max_pages = 3                                # сколько страниц обходить
+max_price = 30                               # фильтр: цена не выше
+# min_price = 10
+# include = ["python", "scraping"]           # в заголовке есть ХОТЯ БЫ ОДНО из слов
+# exclude = ["sex", "cook"]                  # в заголовке НЕТ ни одного из слов
+# allow_empty = false                        # true: «0 объявлений» — это нормально (напр. пустой поиск)
+
+# Если само объявление — это ссылка (<a class="job" href="...">Заголовок</a>), используй "." :
+#
+# [[sources]]
+# name = "Jobs"
+# url = "https://example.com/jobs"
+# item = "a.job"
+# title = "."
+# link = "."
