@@ -1,0 +1,6 @@
+# [job-queue] подтягивает APScheduler — на нём работают напоминания
+python-telegram-bot[job-queue]>=22.0,<23
+openpyxl>=3.1,<4
+python-dotenv>=1.0,<2
+# База часовых поясов для zoneinfo (на Windows и в slim-контейнерах её нет в системе)
+tzdata
